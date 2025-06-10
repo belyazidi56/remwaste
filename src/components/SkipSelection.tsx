@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { SkipCard } from './SkipCard';
 import { LoadingSkeletons } from './LoadingSkeletons';
 import { ErrorMessage } from './ErrorMessage';
 import { StickySelection } from './StickySelection';
+import { SkipFilters } from './SkipFilters';
 import { fetchSkips } from '../services/skipApi';
 import { useSkipStore } from '../store/skipStore';
+import type { SortOption, SkipFilters as SkipFiltersType } from '../types/skip';
 
 export const SkipSelection: React.FC = () => {
   const { selectedSkip } = useSkipStore();
+  const [filters, setFilters] = useState<SkipFiltersType>({});
+  const [sortOption, setSortOption] = useState<SortOption>('price-asc');
   
   const {
     data: skips,
@@ -20,6 +24,60 @@ export const SkipSelection: React.FC = () => {
     queryFn: () => fetchSkips(),
     staleTime: 5 * 60 * 1000
   });
+
+  const filteredAndSortedSkips = useMemo(() => {
+    if (!skips) return [];
+    
+    // Apply filters
+    let result = [...skips];
+        
+    // Filter by size range
+    if (filters.minSize !== undefined) {
+      result = result.filter(skip => skip.size >= filters.minSize!);
+    }
+    
+    if (filters.maxSize !== undefined) {
+      result = result.filter(skip => skip.size <= filters.maxSize!);
+    }
+    
+    // Filter by features
+    if (filters.allowsHeavyWaste) {
+      result = result.filter(skip => skip.allows_heavy_waste);
+    }
+    
+    if (filters.allowedOnRoad) {
+      result = result.filter(skip => skip.allowed_on_road);
+    }
+    
+    // Filter by price
+    if (filters.maxPrice !== undefined) {
+      result = result.filter(skip => {
+        const totalPrice = skip.price_before_vat * (1 + skip.vat);
+        return totalPrice <= filters.maxPrice!;
+      });
+    }
+    
+    // Apply sorting
+    switch (sortOption) {
+      case 'price-asc':
+        result.sort((a, b) => (a.price_before_vat * (1 + a.vat)) - (b.price_before_vat * (1 + b.vat)));
+        break;
+      case 'price-desc':
+        result.sort((a, b) => (b.price_before_vat * (1 + b.vat)) - (a.price_before_vat * (1 + a.vat)));
+        break;
+      case 'size-asc':
+        result.sort((a, b) => a.size - b.size);
+        break;
+      case 'size-desc':
+        result.sort((a, b) => b.size - a.size);
+        break;
+      case 'hire-period':
+        result.sort((a, b) => a.hire_period_days - b.hire_period_days);
+        break;
+    }
+    
+    return result;
+  }, [skips, filters, sortOption]);
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-800 font-sans">
@@ -34,6 +92,13 @@ export const SkipSelection: React.FC = () => {
           </p>
         </header>
 
+        <SkipFilters 
+          onFilterChange={setFilters}
+          onSortChange={setSortOption}
+          initialSort={sortOption}
+          initialFilters={filters}
+        />
+
         <main 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-32 animate-slide-up"
           style={{ animationDelay: '300ms' }}
@@ -41,15 +106,21 @@ export const SkipSelection: React.FC = () => {
           {isLoading && <LoadingSkeletons />}
           {error && (
             <ErrorMessage
-              message="Unable to load skip options. Please try again."
+              message="We couldn't load the skips. Please try again."
               onRetry={() => refetch()}
             />
           )}
-          {skips && skips.map((skip, index) => (
+          {!isLoading && !error && filteredAndSortedSkips.length === 0 && (
+            <div className="col-span-full text-center py-16">
+              <h3 className="text-2xl font-semibold text-neutral-800">No Skips Found</h3>
+              <p className="text-neutral-600 mt-2">Try adjusting your filters to see more results.</p>
+            </div>
+          )}
+          {filteredAndSortedSkips.map((skip, index) => (
             <div 
               key={skip.id} 
               className="animate-slide-up"
-              style={{ animationDelay: `${400 + index * 100}ms` }}
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               <SkipCard skip={skip} />
             </div>

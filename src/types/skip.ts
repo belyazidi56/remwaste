@@ -12,3 +12,18 @@ export interface Skip {
 export interface SelectedSkip extends Skip {
   total_price: number;
 }
+
+export type SortOption = 'price-asc' | 'price-desc' | 'size-asc' | 'size-desc' | 'hire-period';
+
+export interface SkipFilters {
+  minSize?: number;
+  maxSize?: number;
+  allowsHeavyWaste?: boolean;
+  allowedOnRoad?: boolean;
+  maxPrice?: number;
+}
+
+export interface SkipSortAndFilter {
+  sortBy: SortOption;
+  filters: SkipFilters;
+}
