@@ -20,7 +20,7 @@ export const StickySelection: React.FC = () => {
                 {selectedSkip.size} Yard Skip
               </h3>
               <p className="text-sm text-neutral-600">
-                Total Price: <span className="font-bold text-neutral-900">£{selectedSkip.total_price.toFixed(0)}</span>
+                Total Price: <span className="font-bold text-neutral-900">£{selectedSkip.total_price.toFixed(0)}</span> inc. VAT & Delivery
               </p>
             </div>
           </div>

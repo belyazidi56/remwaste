@@ -75,8 +75,7 @@ export const SkipCard: React.FC<SkipCardProps> = ({ skip }) => {
 
         {/* Price */}
         <div className="mb-4">
-          <span className="text-3xl font-extrabold text-neutral-900">£{totalPrice.toFixed(0)}</span>
-          <span className="text-sm text-neutral-500 font-medium ml-1">inc. VAT & Delivery</span>
+          <span className="text-3xl font-extrabold text-neutral-900">£{skip.price_before_vat.toFixed(0)}</span>
         </div>
 
         {/* Features */}

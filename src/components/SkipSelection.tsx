@@ -14,6 +14,10 @@ export const SkipSelection: React.FC = () => {
   const [filters, setFilters] = useState<SkipFiltersType>({});
   const [sortOption, setSortOption] = useState<SortOption>('price-asc');
   
+  const handleFilterChange = (newFilters: SkipFiltersType) => {
+    setFilters(newFilters);
+  };
+  
   const {
     data: skips,
     isLoading,
@@ -50,20 +54,26 @@ export const SkipSelection: React.FC = () => {
     }
     
     // Filter by price
-    if (filters.maxPrice !== undefined) {
+    if (filters.maxPrice !== undefined && filters.maxPrice > 0) {
+      const maxPrice = filters.maxPrice;
+      
       result = result.filter(skip => {
-        const totalPrice = skip.price_before_vat * (1 + skip.vat);
-        return totalPrice <= filters.maxPrice!;
+        const totalPrice = skip.price_before_vat
+        return totalPrice <= maxPrice;
       });
     }
     
     // Apply sorting
     switch (sortOption) {
       case 'price-asc':
-        result.sort((a, b) => (a.price_before_vat * (1 + a.vat)) - (b.price_before_vat * (1 + b.vat)));
+        result.sort((a, b) => {
+          return a.price_before_vat - b.price_before_vat;
+        });
         break;
       case 'price-desc':
-        result.sort((a, b) => (b.price_before_vat * (1 + b.vat)) - (a.price_before_vat * (1 + a.vat)));
+        result.sort((a, b) => {
+          return b.price_before_vat - a.price_before_vat;
+        });
         break;
       case 'size-asc':
         result.sort((a, b) => a.size - b.size);
@@ -88,12 +98,12 @@ export const SkipSelection: React.FC = () => {
             Find the Perfect Skip
           </h1>
           <p className="text-lg sm:text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
-            Fast delivery, competitive pricing, and a size for every project. All prices include VAT.
+            Fast delivery, competitive pricing, and a size for every project.
           </p>
         </header>
 
         <SkipFilters 
-          onFilterChange={setFilters}
+          onFilterChange={handleFilterChange}
           onSortChange={setSortOption}
           initialSort={sortOption}
           initialFilters={filters}

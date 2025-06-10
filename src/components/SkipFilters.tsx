@@ -133,7 +133,16 @@ export const SkipFilters: React.FC<SkipFiltersProps> = ({
                     min={0}
                     placeholder="Max price"
                     value={filters.maxPrice || ''}
-                    onChange={(e) => handleFilterChange({ maxPrice: e.target.value ? Number(e.target.value) : undefined })}
+                    onChange={(e) => {
+                      let value;
+                      if (e.target.value === '') {
+                        value = undefined;
+                      } else {
+                        const parsed = parseFloat(e.target.value);
+                        value = isNaN(parsed) ? undefined : parsed;
+                      }
+                      handleFilterChange({ maxPrice: value });
+                    }}
                     className="w-full px-3 py-2 border border-neutral-200 rounded-md text-sm"
                   />
                 </div>
